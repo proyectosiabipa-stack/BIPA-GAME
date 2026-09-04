@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07090e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Enciende tu bienestar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --midnight: #07090e;
+      --slate-1: #0d111a;
+      --slate-2: #151b28;
+      --slate-3: #222b3c;
+      --indigo: #6366f1;
+      --indigo-soft: rgba(99, 102, 241, .18);
+      --amber: #f59e0b;
+      --gold: #f8c36a;
+      --cream: #fff4d6;
+      --text: #f7f4ec;
+      --muted: #aeb6c8;
+      --line: rgba(255, 255, 255, .1);
+      --glass: rgba(13, 17, 26, .72);
+      --danger: #f97373;
+      --success: #7dd3a5;
+      --shadow: 0 28px 70px rgba(0, 0, 0, .46);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      background: var(--midnight);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      color: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .app-shell {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(99, 102, 241, .24), transparent 36%),
+        linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, 0) 34%),
+        var(--midnight);
+    }
+
+    #ambientCanvas,
+    #gameCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+    }
+
+    #ambientCanvas {
+      z-index: -2;
+    }
+
+    #gameCanvas {
+      z-index: -1;
+      pointer-events: none;
+      opacity: .98;
+    }
+
+    .screen {
+      width: min(100%, 430px);
+      height: min(100%, 880px);
+      display: none;
+      transform: translate3d(0, 12px, 0) scale(.985);
+      opacity: 0;
+      transition: opacity .32s ease, transform .32s ease;
+    }
+
+    .screen.is-active {
+      display: grid;
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .portal {
+      grid-template-rows: auto 1fr;
+      gap: 18px;
+      padding: 12px 0;
+    }
+
+    .brand-row,
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(245, 158, 11, .2);
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(145deg, rgba(245, 158, 11, .16), rgba(99, 102, 241, .12)),
+        rgba(255, 255, 255, .04);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 16px 34px rgba(0, 0, 0, .3);
+    }
+
+    .logo-mark {
+      width: 20px;
+      height: 26px;
+      border-radius: 10px 10px 5px 5px;
+      background: linear-gradient(180deg, var(--cream), var(--amber));
+      box-shadow: 0 0 28px rgba(245, 158, 11, .3);
+    }
+
+    .brand-kicker,
+    .metric-label,
+    .eyebrow {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .brand-name {
+      margin-top: 2px;
+      color: var(--text);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-chip {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      border: 1px solid rgba(125, 211, 165, .2);
+      border-radius: 999px;
+      background: rgba(125, 211, 165, .08);
+      color: #bff4d4;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .hero-panel,
+    .game-panel,
+    .modal-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(21, 27, 40, .82), rgba(9, 12, 19, .78));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .hero-panel {
+      align-self: center;
+      padding: 22px 18px 18px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    h1,
+    h2,
+    .score-value,
+    .result-score {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 12ch;
+      margin-inline: auto;
+      font-size: clamp(42px, 12vw, 58px);
+      line-height: .92;
+    }
+
+    .lead {
+      margin: 14px 0 18px;
+      color: #d8deed;
+      font-size: 15px;
+      line-height: 1.55;
+      max-width: 32ch;
+      margin-inline: auto;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 8px;
+      outline: 0;
+      padding: 0 14px;
+      background: rgba(255, 255, 255, .055);
+      color: var(--text);
+      font-size: 16px;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .input:focus {
+      border-color: rgba(99, 102, 241, .72);
+      background: rgba(255, 255, 255, .075);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, .13);
+    }
+
+    select.input option {
+      background: #ffffff;
+      color: #111827;
+    }
+
+    select.input option:checked {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .cta-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .icon-btn {
+      min-height: 48px;
+      border-radius: 8px;
+      transform: translate3d(0, 0, 0);
+      transition: transform .16s ease, filter .16s ease, border-color .16s ease;
+    }
+
+    .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 16px;
+      background: linear-gradient(135deg, #f7bd55, var(--amber) 58%, #df8d08);
+      color: #1d1302;
+      font-weight: 900;
+      box-shadow: 0 16px 34px rgba(245, 158, 11, .22);
+    }
+
+    .secondary-btn {
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .06);
+      color: #e7eaf3;
+      font-weight: 800;
+    }
+
+    .icon-btn {
+      width: 48px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .primary-btn:active,
+    .secondary-btn:active,
+    .icon-btn:active {
+      transform: translate3d(0, 1px, 0) scale(.985);
+      filter: brightness(.96);
+    }
+
+    .mini-stat,
+    .metric {
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .045);
+      padding: 10px;
+    }
+
+    .mini-stat strong,
+    .metric-value {
+      display: block;
+      margin-top: 3px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .game {
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      padding: 10px 0;
+    }
+
+    .topbar {
+      min-height: 54px;
+    }
+
+    .player-name {
+      max-width: 160px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .chain-indicator {
+      display: flex;
+      gap: 5px;
+      justify-content: flex-end;
+      align-items: center;
+      min-height: 18px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .16);
+      transform: translate3d(0, 0, 0);
+      transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+    .dot.is-lit {
+      background: var(--amber);
+      box-shadow: 0 0 14px rgba(245, 158, 11, .48);
+      transform: translate3d(0, -1px, 0) scale(1.12);
+    }
+
+    .game-panel {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      min-height: 0;
+      padding: 14px;
+      border-radius: 8px;
+    }
+
+    .game-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, transparent, rgba(245, 158, 11, .08), transparent),
+        radial-gradient(circle at 50% 70%, rgba(245, 158, 11, .11), transparent 34%);
+      opacity: .9;
+    }
+
+    .stage {
+      position: relative;
+      z-index: 2;
+      min-height: 0;
+      display: grid;
+      align-items: center;
+      justify-items: center;
+      padding: 8px 0 16px;
+      touch-action: none;
+    }
+
+    .tap-zone {
+      position: relative;
+      width: min(100%, 360px);
+      height: min(66vh, 540px);
+      min-height: 360px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 82px;
+      gap: 16px;
+      align-items: center;
+      touch-action: none;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+    }
+
+    .candle-row {
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 0 18px;
+      pointer-events: none;
+    }
+
+    .candle {
+      position: relative;
+      width: 31%;
+      max-width: 92px;
+      display: grid;
+      align-items: end;
+      justify-items: center;
+      transform: translate3d(0, 0, 0);
+      transition: transform .24s ease, filter .24s ease;
+    }
+
+    .candle.is-active {
+      transform: translate3d(0, -8px, 0);
+      filter: drop-shadow(0 18px 26px rgba(0, 0, 0, .18));
+    }
+
+    .candle.is-lit {
+      filter: drop-shadow(0 0 24px rgba(245, 158, 11, .42));
+    }
+
+    .candle.is-igniting {
+      filter: drop-shadow(0 0 18px rgba(245, 158, 11, .28));
+    }
+
+    .candle:nth-child(1) {
+      height: 52%;
+    }
+
+    .candle:nth-child(2) {
+      height: 68%;
+    }
+
+    .candle:nth-child(3) {
+      height: 84%;
+    }
+
+    .candle-asset {
+      width: 100%;
+      height: 86%;
+      border-radius: 30px 30px 9px 9px / 24px 24px 9px 9px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .16), transparent 30%, rgba(0, 0, 0, .11) 84%),
+        linear-gradient(180deg, #c9c1ad, #8d7958 72%, #3e3427);
+      filter: saturate(.34) brightness(.72);
+      box-shadow: inset -12px 0 22px rgba(18, 16, 12, .38), inset 9px 0 16px rgba(255, 255, 255, .12), inset 0 8px 12px rgba(255, 249, 225, .05);
+      transition: filter .28s ease, box-shadow .28s ease, background .28s ease;
+    }
+
+    .candle.is-lit .candle-asset {
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .22), transparent 30%, rgba(0, 0, 0, .08) 84%),
+        linear-gradient(180deg, #f3e3bc, #d6ad65 70%, #886434);
+      filter: saturate(1) brightness(1.04);
+      box-shadow: inset -10px 0 22px rgba(34, 25, 11, .26), inset 7px 0 14px rgba(255, 255, 255, .18), 0 16px 36px rgba(245, 158, 11, .16);
+    }
+
+    .wick {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      width: 3px;
+      height: 16px;
+      border-radius: 999px;
+      background: #21160b;
+      transform: translate3d(-50%, 0, 0);
+    }
+
+    .flame {
+      position: absolute;
+      top: 2%;
+      left: 50%;
+      width: 30px;
+      height: 42px;
+      opacity: 0;
+      transform: translate3d(-50%, 12px, 0) scale(.65);
+      transform-origin: 50% 80%;
+      transition: opacity .18s ease, transform .2s ease;
+      background:
+        radial-gradient(circle at 50% 70%, #fff8cf 0 18%, transparent 19%),
+        radial-gradient(ellipse at 50% 58%, #ffc85a 0 42%, transparent 44%),
+        radial-gradient(ellipse at 50% 48%, #f97316 0 58%, transparent 60%);
+      border-radius: 62% 38% 58% 42% / 70% 52% 48% 30%;
+      filter: blur(.1px) drop-shadow(0 0 20px rgba(245, 158, 11, .55));
+      animation: flameDance .78s ease-in-out infinite alternate;
+    }
+
+    .candle.is-lit .flame {
+      opacity: 1;
+      transform: translate3d(-50%, 0, 0) scale(1);
+    }
+
+    .lighter {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      width: 36px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate3d(-50%, 8px, 0);
+      will-change: transform;
+      transition: opacity .2s ease, transform .24s ease;
+    }
+
+    .candle.is-active .lighter {
+      opacity: 1;
+      transform: translate3d(-50%, 0, 0);
+    }
+
+    .candle.is-igniting .lighter {
+      opacity: 1;
+      animation: lighterIgnite .62s ease-in-out both;
+    }
+
+    .lighter-body {
+      width: 24px;
+      height: 38px;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #2b3346, #111827);
+      border: 1px solid rgba(255, 255, 255, .16);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 12px 24px rgba(0, 0, 0, .36);
+    }
+
+    .lighter-flame {
+      position: absolute;
+      top: -2px;
+      width: 18px;
+      height: 24px;
+      background:
+        radial-gradient(circle at 50% 74%, #fff8cf 0 20%, transparent 21%),
+        radial-gradient(ellipse at 50% 54%, #ffc85a 0 46%, transparent 48%),
+        radial-gradient(ellipse at 50% 44%, #f97316 0 64%, transparent 66%);
+      border-radius: 60% 40% 58% 42%;
+      filter: drop-shadow(0 0 14px rgba(245, 158, 11, .68));
+    }
+
+    .precision-bar {
+      position: relative;
+      width: 54px;
+      height: min(96%, 470px);
+      justify-self: end;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: linear-gradient(180deg, rgba(99, 102, 241, .16), rgba(255, 255, 255, .055), rgba(245, 158, 11, .16));
+      box-shadow: inset 0 0 24px rgba(0, 0, 0, .34), 0 18px 44px rgba(0, 0, 0, .24);
+      overflow: hidden;
+    }
+
+    .precision-target {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 50%;
+      height: 36px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, .22);
+      border: 1px solid rgba(248, 195, 106, .82);
+      transform: translate3d(0, -50%, 0);
+      box-shadow: 0 0 26px rgba(245, 158, 11, .26);
+    }
+
+    .precision-marker {
+      position: absolute;
+      left: 7px;
+      right: 7px;
+      height: 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f7bd55, var(--amber));
+      transform: translate3d(0, 0, 0);
+      will-change: transform, opacity;
+      box-shadow: 0 0 24px rgba(245, 158, 11, .55);
+      pointer-events: none;
+    }
+
+    .feedback {
+      position: absolute;
+      top: 44%;
+      left: 50%;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(7, 9, 14, .74);
+      color: var(--cream);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      transform: translate3d(-50%, 8px, 0) scale(.96);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+    }
+
+    .feedback.is-visible {
+      opacity: 1;
+      transform: translate3d(-50%, -8px, 0) scale(1);
+    }
+
+    .footer-actions {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr;
+      justify-items: end;
+    }
+
+    .hint {
+      position: relative;
+      z-index: 2;
+      max-width: 13ch;
+      margin: 0 auto 8px;
+      color: var(--text);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(28px, 8vw, 38px);
+      font-weight: 700;
+      line-height: .98;
+      text-align: center;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      inset: 12%;
+      border: 1px solid rgba(99, 102, 241, .1);
+      border-radius: 999px;
+      opacity: .42;
+      transform: translate3d(0, 0, 0);
+      animation: breath 2.2s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      place-items: center;
+      padding: calc(18px + var(--safe-top)) 18px calc(18px + var(--safe-bottom));
+      background: rgba(4, 6, 11, .62);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .modal.is-open {
+      display: grid;
+    }
+
+    .modal-card {
+      width: min(100%, 390px);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .modal-card h2 {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .result-score {
+      margin: 16px 0;
+      font-size: 58px;
+      line-height: .9;
+      color: var(--gold);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0 18px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes flameDance {
+      from { transform: translate3d(-50%, 0, 0) rotate(-2deg) scale(.96); }
+      to { transform: translate3d(-50%, -2px, 0) rotate(2deg) scale(1.04); }
+    }
+
+    @keyframes breath {
+      from { opacity: .3; transform: translate3d(0, 0, 0) scale(.92); }
+      to { opacity: .72; transform: translate3d(0, 0, 0) scale(1.04); }
+    }
+
+    @keyframes lighterIgnite {
+      0% { transform: translate3d(-50%, 0, 0) rotate(0deg); }
+      45% { transform: translate3d(-50%, 22px, 0) rotate(-5deg); }
+      72% { transform: translate3d(-50%, 14px, 0) rotate(4deg); }
+      100% { transform: translate3d(-50%, 0, 0) rotate(0deg); }
+    }
+
+    @media (min-width: 700px) {
+      .app-shell {
+        padding-inline: 24px;
+      }
+
+      .screen {
+        width: min(430px, 100%);
+      }
+    }
+
+    @media (max-height: 700px) {
+      .hero-panel {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 38px;
+      }
+
+      .lead {
+        margin: 10px 0 12px;
+        font-size: 13px;
+      }
+
+      .tap-zone {
+        min-height: 300px;
+        height: min(56vh, 390px);
+      }
+
+      .score-value {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell" aria-live="polite">
+    <canvas id="ambientCanvas" aria-hidden="true"></canvas>
+    <canvas id="gameCanvas" aria-hidden="true"></canvas>
+
+    <section class="screen portal is-active" id="portalScreen">
+      <header class="brand-row">
+        <div class="brand">
+          <div class="logo" id="brandLogo"><span class="logo-mark"></span></div>
+          <div>
+            <div class="brand-kicker">BIPA Experience</div>
+            <div class="brand-name">Enciende tu bienestar</div>
+          </div>
+        </div>
+        <div class="status-chip">Live</div>
+      </header>
+
+      <div class="hero-panel">
+        <h1>Enciende tu bienestar</h1>
+        <p class="lead">Registra tu entrada y completa el reto encendiendo los tres velones en el punto exacto.</p>
+
+        <form class="form-grid" id="registerForm" autocomplete="on">
+          <label class="field">
+            <span>Nombre</span>
+            <input class="input" id="nameInput" name="name" type="text" inputmode="text" autocomplete="name" required maxlength="40" placeholder="Tu nombre">
+          </label>
+          <label class="field">
+            <span>Telefono</span>
+            <input class="input" id="phoneInput" name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="24" placeholder="0414-0000000">
+          </label>
+          <label class="field">
+            <span>Estado</span>
+            <select class="input" id="stateInput" name="state" required>
+              <option value="" selected disabled>Selecciona tu estado</option>
+              <option value="Amazonas">Amazonas</option>
+              <option value="Anzoategui">Anzoategui</option>
+              <option value="Apure">Apure</option>
+              <option value="Aragua">Aragua</option>
+              <option value="Barinas">Barinas</option>
+              <option value="Bolivar">Bolivar</option>
+              <option value="Carabobo">Carabobo</option>
+              <option value="Cojedes">Cojedes</option>
+              <option value="Delta Amacuro">Delta Amacuro</option>
+              <option value="Distrito Capital">Distrito Capital</option>
+              <option value="Falcon">Falcon</option>
+              <option value="Guarico">Guarico</option>
+              <option value="Lara">Lara</option>
+              <option value="Merida">Merida</option>
+              <option value="Miranda">Miranda</option>
+              <option value="Monagas">Monagas</option>
+              <option value="Nueva Esparta">Nueva Esparta</option>
+              <option value="Portuguesa">Portuguesa</option>
+              <option value="Sucre">Sucre</option>
+              <option value="Tachira">Tachira</option>
+              <option value="Trujillo">Trujillo</option>
+              <option value="La Guaira">La Guaira</option>
+              <option value="Yaracuy">Yaracuy</option>
+              <option value="Zulia">Zulia</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Correo electronico</span>
+            <input class="input" id="emailInput" name="email" type="email" inputmode="email" autocomplete="email" required maxlength="70" placeholder="correo@ejemplo.com">
+          </label>
+          <div class="cta-row">
+            <button class="primary-btn" type="submit">Iniciar juego</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="screen game" id="gameScreen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo"><span class="logo-mark"></span></div>
+          <div>
+            <div class="brand-kicker">Jugador</div>
+            <div class="brand-name player-name" id="playerName">Jugador</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="backBtn" type="button" aria-label="Volver">←</button>
+      </header>
+
+      <div class="scoreboard">
+        <div class="chain-indicator" id="chainIndicator"></div>
+      </div>
+
+      <div class="game-panel">
+        <div class="hint">Presiona en el centro de la barra</div>
+        <div class="stage">
+          <div class="tap-zone" id="tapZone" role="button" aria-label="Tocar cuando la chispa pase por el velon activo">
+            <div class="pulse-ring"></div>
+            <div class="candle-row" id="candleRow"></div>
+            <div class="precision-bar" id="precisionBar">
+              <div class="precision-target"></div>
+              <div class="precision-marker" id="precisionMarker"></div>
+            </div>
+            <div class="feedback" id="feedback">Perfecto</div>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="primary-btn" id="tapBtn" type="button">Encender</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal" id="resultModal" aria-modal="true" role="dialog">
+      <div class="modal-card">
+        <div class="eyebrow">Resultado final</div>
+        <h2 id="resultTitle">Felicidades, has ganado un premio</h2>
+        <div class="result-score" id="resultScore">3/3</div>
+        <div class="result-grid">
+          <div class="mini-stat"><span class="metric-label">Combo</span><strong id="resultCombo">0x</strong></div>
+          <div class="mini-stat"><span class="metric-label">Velones</span><strong id="resultCandles">0/3</strong></div>
+          <div class="mini-stat"><span class="metric-label">Precision</span><strong id="resultAccuracy">0%</strong></div>
+        </div>
+        <div class="cta-row">
+          <button class="primary-btn" id="restartBtn" type="button">Reintentar</button>
+          <button class="secondary-btn" id="finishBtn" type="button">Finalizar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // URL de Assets (Sustituir por rutas locales o URLs directas)
+    const LOGO_URL = "";           // Logo de la marca
+    const VELON_IMAGE_URL = "";   // Imagen del velón apagado (velon.png)
+    const CHISPA_IMAGE_URL = "";  // Imagen de la chispa móvil (chispa.png)
+    const FUEGO_IMAGE_URL = "";   // Imagen de la llama sobre la mecha (fuego.png)
+
+    // Configuración del Juego de Ritmo
+    const VELOCIDAD_CHISPA = 3.25; // Velocidad de movimiento vertical del indicador
+    const TOLERANCIA_PX = 25;      // Margen de tolerancia en píxeles para acertar el toque
+
+    // Integración Backend (Google Sheets)
+    const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxcza89dLH9NOomjI-3ZUpg95z3P6dhpluGZQ8un5Q8KRrsT7VpiHgmvDZYAcTRLfcrvg/exec";
+
+    const $ = (selector) => document.querySelector(selector);
+    const STORAGE_KEY = "bipa-chain-session-v1";
+    const SCORE_KEY = "bipa-chain-best-v1";
+    const CANDLE_COUNT = 3;
+
+    const state = {
+      user: null,
+      screen: "portal",
+      score: 0,
+      combo: 0,
+      bestCombo: 0,
+      hits: 0,
+      attempts: 0,
+      activeCandle: 0,
+      litCandles: new Set(),
+      markerY: 0,
+      markerDirection: 1,
+      targetX: 0,
+      targetY: 0,
+      barHeight: 320,
+      stageWidth: 320,
+      stageHeight: 420,
+      lastFrame: 0,
+      running: false,
+      igniting: false,
+      submitted: false
+    };
+
+    const els = {
+      ambientCanvas: $("#ambientCanvas"),
+      gameCanvas: $("#gameCanvas"),
+      portalScreen: $("#portalScreen"),
+      gameScreen: $("#gameScreen"),
+      registerForm: $("#registerForm"),
+      backBtn: $("#backBtn"),
+      tapBtn: $("#tapBtn"),
+      tapZone: $("#tapZone"),
+      candleRow: $("#candleRow"),
+      precisionBar: $("#precisionBar"),
+      precisionMarker: $("#precisionMarker"),
+      feedback: $("#feedback"),
+      playerName: $("#playerName"),
+      chainIndicator: $("#chainIndicator"),
+      resultModal: $("#resultModal"),
+      resultTitle: $("#resultTitle"),
+      resultScore: $("#resultScore"),
+      resultCombo: $("#resultCombo"),
+      resultCandles: $("#resultCandles"),
+      resultAccuracy: $("#resultAccuracy"),
+      restartBtn: $("#restartBtn"),
+      finishBtn: $("#finishBtn"),
+      brandLogo: $("#brandLogo"),
+      nameInput: $("#nameInput"),
+      phoneInput: $("#phoneInput"),
+      stateInput: $("#stateInput"),
+      emailInput: $("#emailInput")
+    };
+
+    const ambient = {
+      ctx: els.ambientCanvas.getContext("2d", { alpha: true }),
+      particles: [],
+      pointer: { x: innerWidth * .5, y: innerHeight * .5, active: false },
+      dpr: 1
+    };
+
+    const gameFx = {
+      ctx: els.gameCanvas.getContext("2d", { alpha: true }),
+      bursts: [],
+      dpr: 1
+    };
+
+    const assetImages = {
+      logo: loadImage(LOGO_URL),
+      candle: loadImage(VELON_IMAGE_URL),
+      flame: loadImage(FUEGO_IMAGE_URL)
+    };
+
+    function loadImage(src) {
+      if (!src) return null;
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+      return image;
+    }
+
+    function init() {
+      applyAssets();
+      hydrateSession();
+      buildCandles();
+      buildChainDots();
+      bindFastEvents();
+      resizeCanvases();
+      syncStageMetrics();
+      window.addEventListener("resize", handleResize, { passive: true });
+      requestAnimationFrame(drawAmbient);
+      requestAnimationFrame(gameLoop);
+    }
+
+    function applyAssets() {
+      if (assetImages.logo) {
+        els.brandLogo.innerHTML = "";
+        els.brandLogo.appendChild(assetImages.logo);
+      }
+    }
+
+    function hydrateSession() {
+      try {
+        state.user = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      } catch {
+        state.user = null;
+      }
+      if (state.user?.name) {
+        els.nameInput.value = state.user.name;
+        els.phoneInput.value = state.user.phone || "";
+        els.stateInput.value = state.user.state || "";
+        els.emailInput.value = state.user.email || "";
+      }
+    }
+
+    function bindFastEvents() {
+      els.registerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const formData = new FormData(els.registerForm);
+        startExperience({
+          name: String(formData.get("name") || "").trim(),
+          phone: String(formData.get("phone") || "").trim(),
+          state: String(formData.get("state") || "").trim(),
+          email: String(formData.get("email") || "").trim()
+        });
+      });
+
+      onFastPress(els.backBtn, () => switchScreen("portal"));
+      onFastPress(els.tapBtn, handleTap);
+      onFastPress(els.tapZone, handleTap);
+      onFastPress(els.restartBtn, restartRound);
+      onFastPress(els.finishBtn, () => {
+        els.resultModal.classList.remove("is-open");
+        switchScreen("portal");
+      });
+
+      window.addEventListener("pointermove", (event) => {
+        ambient.pointer.x = event.clientX;
+        ambient.pointer.y = event.clientY;
+        ambient.pointer.active = true;
+      }, { passive: true });
+    }
+
+    function onFastPress(element, handler) {
+      let lastTouch = 0;
+      element.addEventListener("touchstart", (event) => {
+        lastTouch = performance.now();
+        handler(event);
+      }, { passive: true });
+      element.addEventListener("pointerdown", (event) => {
+        if (performance.now() - lastTouch < 450) return;
+        handler(event);
+      });
+    }
+
+    function startExperience(user) {
+      if (!user.name) {
+        els.nameInput.focus();
+        return;
+      }
+      if (!user.phone) {
+        els.phoneInput.focus();
+        return;
+      }
+      if (!user.state) {
+        els.stateInput.focus();
+        return;
+      }
+      if (!user.email) {
+        els.emailInput.focus();
+        return;
+      }
+      state.user = { ...user, registeredAt: new Date().toISOString() };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user));
+      els.playerName.textContent = state.user.name;
+      switchScreen("game");
+      restartRound();
+    }
+
+    function switchScreen(screen) {
+      state.screen = screen;
+      els.portalScreen.classList.toggle("is-active", screen === "portal");
+      els.gameScreen.classList.toggle("is-active", screen === "game");
+      state.running = screen === "game" && !els.resultModal.classList.contains("is-open");
+      syncStageMetrics();
+    }
+
+    function restartRound() {
+      state.score = 0;
+      state.combo = 0;
+      state.bestCombo = 0;
+      state.hits = 0;
+      state.attempts = 0;
+      state.activeCandle = 0;
+      state.litCandles.clear();
+      state.markerY = 0;
+      state.markerDirection = 1;
+      state.running = true;
+      state.igniting = false;
+      state.submitted = false;
+      state.lastFrame = performance.now();
+      els.resultModal.classList.remove("is-open");
+      syncStageMetrics();
+      updateHud();
+    }
+
+    function buildCandles() {
+      const fragment = document.createDocumentFragment();
+      for (let index = 0; index < CANDLE_COUNT; index += 1) {
+        const candle = document.createElement("div");
+        candle.className = "candle";
+        candle.dataset.index = index;
+        candle.innerHTML = `
+          <div class="lighter">
+            <div class="lighter-flame"></div>
+            <div class="lighter-body"></div>
+          </div>
+          <div class="flame"></div>
+          <div class="wick"></div>
+          <div class="candle-asset"></div>
+        `;
+        if (assetImages.candle) {
+          const asset = candle.querySelector(".candle-asset");
+          asset.style.background = `center / contain no-repeat url("${VELON_IMAGE_URL}")`;
+        }
+        if (assetImages.flame) {
+          const flame = candle.querySelector(".flame");
+          flame.style.background = `center / contain no-repeat url("${FUEGO_IMAGE_URL}")`;
+          flame.style.borderRadius = "0";
+        }
+        fragment.appendChild(candle);
+      }
+      els.candleRow.appendChild(fragment);
+    }
+
+    function buildChainDots() {
+      const fragment = document.createDocumentFragment();
+      for (let index = 0; index < CANDLE_COUNT; index += 1) {
+        const dot = document.createElement("span");
+        dot.className = "dot";
+        fragment.appendChild(dot);
+      }
+      els.chainIndicator.appendChild(fragment);
+    }
+
+    function handleResize() {
+      resizeCanvases();
+      syncStageMetrics();
+    }
+
+    function resizeCanvases() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      [ambient, gameFx].forEach((layer) => {
+        const canvas = layer === ambient ? els.ambientCanvas : els.gameCanvas;
+        layer.dpr = dpr;
+        canvas.width = Math.floor(innerWidth * dpr);
+        canvas.height = Math.floor(innerHeight * dpr);
+        canvas.style.width = `${innerWidth}px`;
+        canvas.style.height = `${innerHeight}px`;
+        layer.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      });
+      seedParticles();
+    }
+
+    function seedParticles() {
+      const count = Math.max(36, Math.min(72, Math.floor(innerWidth * innerHeight / 15500)));
+      ambient.particles = Array.from({ length: count }, () => ({
+        x: Math.random() * innerWidth,
+        y: Math.random() * innerHeight,
+        vx: (Math.random() - .5) * .22,
+        vy: (Math.random() - .5) * .22,
+        r: 1 + Math.random() * 1.8,
+        tone: Math.random()
+      }));
+    }
+
+    function syncStageMetrics() {
+      const rect = els.tapZone.getBoundingClientRect();
+      state.stageWidth = rect.width || 320;
+      state.stageHeight = rect.height || 420;
+      const barRect = els.precisionBar.getBoundingClientRect();
+      state.barHeight = barRect.height || 320;
+      state.targetY = state.barHeight * .5;
+      updateCandles();
+    }
+
+    function updateCandles() {
+      const candles = els.candleRow.querySelectorAll(".candle");
+      candles.forEach((candle, index) => {
+        candle.classList.toggle("is-active", index === state.activeCandle);
+        candle.classList.toggle("is-lit", state.litCandles.has(index));
+      });
+      els.chainIndicator.querySelectorAll(".dot").forEach((dot, index) => {
+        dot.classList.toggle("is-lit", state.litCandles.has(index));
+      });
+    }
+
+    function gameLoop(now) {
+      const dt = Math.min(32, now - (state.lastFrame || now));
+      state.lastFrame = now;
+
+      if (state.screen === "game" && state.running) {
+        state.markerY += VELOCIDAD_CHISPA * state.markerDirection * dt * .62;
+        if (state.markerY >= state.barHeight - 18) {
+          state.markerY = state.barHeight - 18;
+          state.markerDirection = -1;
+        } else if (state.markerY <= 0) {
+          state.markerY = 0;
+          state.markerDirection = 1;
+        }
+        els.precisionMarker.style.transform = `translate3d(0, ${state.markerY}px, 0)`;
+        drawGameFx();
+        updateHud();
+        if (state.litCandles.size === CANDLE_COUNT) finishRound(true);
+      } else {
+        drawGameFx();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function handleTap() {
+      if (!state.running || state.igniting || state.screen !== "game") return;
+      state.attempts += 1;
+      const markerCenter = state.markerY + 9;
+      const distance = Math.abs(markerCenter - state.targetY);
+      const hit = distance <= TOLERANCIA_PX;
+
+      if (hit) {
+        const quality = Math.max(0, 1 - distance / TOLERANCIA_PX);
+        const points = Math.round(300 + quality * 300);
+        state.score += points;
+        state.combo += 1;
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
+        state.hits += 1;
+        animateIgnition(quality);
+        showFeedback(quality > .72 ? "Perfecto" : "Encendido");
+      } else {
+        state.combo = 0;
+        showFeedback("Intenta de nuevo");
+        createMissRipple(getActiveCandleCenterX(), state.stageHeight * .48);
+        vibrate(45);
+        syncStageMetrics();
+        updateHud();
+        finishRound(false);
+        return;
+      }
+
+      vibrate(hit ? 18 : 35);
+      syncStageMetrics();
+      updateHud();
+    }
+
+    function animateIgnition(quality) {
+      const candleIndex = state.activeCandle;
+      const candle = els.candleRow.querySelector(`[data-index="${candleIndex}"]`);
+      state.igniting = true;
+      state.running = false;
+      candle?.classList.add("is-igniting");
+      window.setTimeout(() => {
+        state.litCandles.add(candleIndex);
+        createBurst(getCandleCenterX(candleIndex), state.stageHeight * .48, quality);
+        candle?.classList.remove("is-igniting");
+        if (state.litCandles.size === CANDLE_COUNT) {
+          updateCandles();
+          state.igniting = false;
+          finishRound(true);
+          return;
+        }
+        state.activeCandle = Math.min(CANDLE_COUNT - 1, candleIndex + 1);
+        state.markerY = 0;
+        state.markerDirection = 1;
+        state.igniting = false;
+        state.running = true;
+        syncStageMetrics();
+        updateHud();
+      }, 620);
+    }
+
+    function updateHud() {
+      const accuracy = state.attempts ? Math.round((state.hits / state.attempts) * 100) : 0;
+      return accuracy;
+    }
+
+    function getActiveCandleCenterX() {
+      return getCandleCenterX(state.activeCandle);
+    }
+
+    function getCandleCenterX(index) {
+      const candle = els.candleRow.querySelector(`[data-index="${index}"]`);
+      if (!candle) return state.stageWidth * .5;
+      const stageRect = els.tapZone.getBoundingClientRect();
+      const candleRect = candle.getBoundingClientRect();
+      return candleRect.left - stageRect.left + candleRect.width * .5;
+    }
+
+    function showFeedback(text) {
+      els.feedback.textContent = text;
+      els.feedback.classList.add("is-visible");
+      window.clearTimeout(showFeedback.timer);
+      showFeedback.timer = window.setTimeout(() => els.feedback.classList.remove("is-visible"), 420);
+    }
+
+    function createBurst(x, y, quality) {
+      for (let index = 0; index < 18; index += 1) {
+        const angle = (Math.PI * 2 * index) / 18;
+        const speed = 1.2 + Math.random() * 2.4 + quality;
+        gameFx.bursts.push({
+          x: x + els.tapZone.getBoundingClientRect().left,
+          y: y + els.tapZone.getBoundingClientRect().top,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          color: index % 3 === 0 ? "#6366f1" : "#f59e0b"
+        });
+      }
+    }
+
+    function createMissRipple(x, y) {
+      gameFx.bursts.push({
+        x: x + els.tapZone.getBoundingClientRect().left,
+        y: y + els.tapZone.getBoundingClientRect().top,
+        vx: 0,
+        vy: 0,
+        life: .8,
+        miss: true,
+        color: "#f97373"
+      });
+    }
+
+    function drawGameFx() {
+      const ctx = gameFx.ctx;
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      gameFx.bursts = gameFx.bursts.filter((particle) => particle.life > .02);
+      gameFx.bursts.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += .018;
+        particle.life *= .94;
+        ctx.globalAlpha = particle.life;
+        ctx.strokeStyle = particle.color;
+        ctx.fillStyle = particle.color;
+        if (particle.miss) {
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, (1 - particle.life) * 55, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 2.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function drawAmbient() {
+      const ctx = ambient.ctx;
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      ctx.lineWidth = 1;
+      ambient.particles.forEach((particle, index) => {
+        const pointerPull = ambient.pointer.active ? Math.max(0, 1 - distance(particle, ambient.pointer) / 190) : 0;
+        particle.x += particle.vx + (ambient.pointer.x - particle.x) * pointerPull * .0009;
+        particle.y += particle.vy + (ambient.pointer.y - particle.y) * pointerPull * .0009;
+        if (particle.x < -20) particle.x = innerWidth + 20;
+        if (particle.x > innerWidth + 20) particle.x = -20;
+        if (particle.y < -20) particle.y = innerHeight + 20;
+        if (particle.y > innerHeight + 20) particle.y = -20;
+
+        for (let nextIndex = index + 1; nextIndex < ambient.particles.length; nextIndex += 1) {
+          const other = ambient.particles[nextIndex];
+          const dist = distance(particle, other);
+          if (dist < 132) {
+            const alpha = (1 - dist / 132) * .24;
+            ctx.strokeStyle = particle.tone > .72 ? `rgba(245, 158, 11, ${alpha})` : `rgba(99, 102, 241, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.stroke();
+          }
+        }
+
+        ctx.fillStyle = particle.tone > .72 ? "rgba(245, 158, 11, .52)" : "rgba(216, 222, 237, .38)";
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(drawAmbient);
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function finishRound(won) {
+      if (state.submitted) return;
+      state.running = false;
+      state.igniting = false;
+      state.submitted = true;
+      const accuracy = state.attempts ? Math.round((state.hits / state.attempts) * 100) : 0;
+      const previousBest = Number(localStorage.getItem(SCORE_KEY) || 0);
+      if (state.score > previousBest) {
+        localStorage.setItem(SCORE_KEY, String(state.score));
+      }
+      els.resultTitle.textContent = won ? "Felicidades, has ganado un premio" : "Fallaste, intenta de nuevo";
+      els.resultScore.textContent = won ? "3/3" : `${state.litCandles.size}/${CANDLE_COUNT}`;
+      els.resultCombo.textContent = `${state.bestCombo}x`;
+      els.resultCandles.textContent = `${state.litCandles.size}/${CANDLE_COUNT}`;
+      els.resultAccuracy.textContent = `${accuracy}%`;
+      els.resultModal.classList.add("is-open");
+      persistResult(accuracy);
+    }
+
+    function persistResult(accuracy) {
+      const payload = {
+        ...state.user,
+        score: state.score,
+        hits: state.hits,
+        attempts: state.attempts,
+        accuracy,
+        bestCombo: state.bestCombo,
+        candles: state.litCandles.size,
+        completedAt: new Date().toISOString()
+      };
+      const history = JSON.parse(localStorage.getItem("bipa-chain-history-v1") || "[]");
+      history.unshift(payload);
+      localStorage.setItem("bipa-chain-history-v1", JSON.stringify(history.slice(0, 20)));
+      if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    }
+
+    function vibrate(duration) {
+      if ("vibrate" in navigator) navigator.vibrate(duration);
+    }
+
+    document.addEventListener("gesturestart", (event) => event.preventDefault());
+    document.addEventListener("touchmove", (event) => {
+      if (state.screen === "game") event.preventDefault();
+    }, { passive: false });
+
+    init();
+  </script>
+</body>
+</html>
