@@ -1095,6 +1095,7 @@
       }
       state.user = { ...user, registeredAt: new Date().toISOString() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user));
+      sendRegistration(state.user);
       els.playerName.textContent = state.user.name;
       switchScreen("game");
       restartRound();
@@ -1430,10 +1431,24 @@
       els.resultCandles.textContent = `${state.litCandles.size}/${CANDLE_COUNT}`;
       els.resultAccuracy.textContent = `${accuracy}%`;
       els.resultModal.classList.add("is-open");
-      persistResult(accuracy);
+      saveLocalResult(accuracy);
     }
 
-    function persistResult(accuracy) {
+    function sendRegistration(user) {
+      if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...user,
+          event: "registration_started",
+          startedAt: new Date().toISOString()
+        })
+      }).catch(() => {});
+    }
+
+    function saveLocalResult(accuracy) {
       const payload = {
         ...state.user,
         score: state.score,
@@ -1447,13 +1462,6 @@
       const history = JSON.parse(localStorage.getItem("bipa-chain-history-v1") || "[]");
       history.unshift(payload);
       localStorage.setItem("bipa-chain-history-v1", JSON.stringify(history.slice(0, 20)));
-      if (!GOOGLE_SHEET_WEBHOOK_URL) return;
-      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).catch(() => {});
     }
 
     function vibrate(duration) {
