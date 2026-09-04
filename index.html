@@ -920,6 +920,7 @@
     const $ = (selector) => document.querySelector(selector);
     const STORAGE_KEY = "bipa-chain-session-v1";
     const SCORE_KEY = "bipa-chain-best-v1";
+    const SENT_REGISTRATION_KEY = "bipa-chain-sent-registration-v1";
     const CANDLE_COUNT = 3;
 
     const state = {
@@ -1095,7 +1096,7 @@
       }
       state.user = { ...user, registeredAt: new Date().toISOString() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user));
-      sendRegistration(state.user);
+      sendRegistrationOnce(state.user);
       els.playerName.textContent = state.user.name;
       switchScreen("game");
       restartRound();
@@ -1434,18 +1435,38 @@
       saveLocalResult(accuracy);
     }
 
-    function sendRegistration(user) {
+    function sendRegistrationOnce(user) {
       if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+      const registrationId = buildRegistrationId(user);
+      if (localStorage.getItem(SENT_REGISTRATION_KEY) === registrationId) return;
+      localStorage.setItem(SENT_REGISTRATION_KEY, registrationId);
+      const sentAt = new Date().toISOString();
+      const payload = {
+        fecha: sentAt,
+        nombre: user.name,
+        telefono: user.phone,
+        estado: user.state,
+        email: user.email,
+        score: "",
+        velones: "",
+        accuracy: "",
+        name: user.name,
+        phone: user.phone,
+        state: user.state,
+        event: "registration_started",
+        startedAt: sentAt
+      };
       fetch(GOOGLE_SHEET_WEBHOOK_URL, {
         method: "POST",
         mode: "no-cors",
+        keepalive: true,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...user,
-          event: "registration_started",
-          startedAt: new Date().toISOString()
-        })
+        body: JSON.stringify(payload)
       }).catch(() => {});
+    }
+
+    function buildRegistrationId(user) {
+      return [user.phone, user.email].map((value) => String(value || "").trim().toLowerCase()).join("|");
     }
 
     function saveLocalResult(accuracy) {
