@@ -40,11 +40,11 @@
       --input-border: #d2ded4;
       --input-icon: #5f7464;
 
-      --btn-bg: linear-gradient(135deg, #1e4d2b 0%, #13381e 100%);
-      --btn-hover: linear-gradient(135deg, #286438 0%, #184626 100%);
+      --btn-bg: linear-gradient(135deg, #74c65b 0%, #20935b 52%, #087244 100%);
+      --btn-hover: linear-gradient(135deg, #8bd871 0%, #28aa68 52%, #0a8150 100%);
 
       --shadow-card: 0 30px 70px -15px rgba(20, 60, 30, 0.12), 0 12px 30px -8px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.04);
-      --shadow-btn: 0 10px 22px -3px rgba(30, 77, 43, 0.35);
+      --shadow-btn: 0 12px 24px -5px rgba(32, 147, 91, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.55) inset;
       --radius-card: 32px;
       --radius-input: 14px;
     }
@@ -431,13 +431,36 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      position: relative;
+      overflow: hidden;
+      animation: friendly-green-pulse 2.15s ease-in-out infinite;
+    }
+    .btn-bipa-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.48) 42%, transparent 72%);
+      transform: translateX(-115%) skewX(-18deg);
+      animation: cta-light-sweep 2.8s ease-in-out infinite;
+      pointer-events: none;
     }
     .btn-bipa-primary:hover {
       background: var(--btn-hover);
       transform: translateY(-2px);
-      box-shadow: 0 12px 24px -4px rgba(30, 77, 43, 0.45);
+      box-shadow: 0 16px 30px -6px rgba(32, 147, 91, 0.58), 0 0 0 1px rgba(255,255,255,0.7) inset;
     }
     .btn-bipa-primary:active { transform: translateY(0); }
+
+    @keyframes friendly-green-pulse {
+      0%, 100% { transform: translateY(0) scale(1); box-shadow: var(--shadow-btn); filter: saturate(1); }
+      50% { transform: translateY(-1px) scale(1.018); box-shadow: 0 18px 34px -7px rgba(32, 147, 91, 0.62), 0 0 0 5px rgba(116, 198, 91, 0.15), 0 0 0 1px rgba(255,255,255,0.7) inset; filter: saturate(1.12); }
+    }
+
+    @keyframes cta-light-sweep {
+      0%, 35% { transform: translateX(-115%) skewX(-18deg); opacity: 0; }
+      48% { opacity: 1; }
+      76%, 100% { transform: translateX(125%) skewX(-18deg); opacity: 0; }
+    }
 
     /* =======================================================
        RITUAL SENSORIAL — AROMÁTICO DIURNO CON NOTAS DE FRAGANCIA
@@ -490,6 +513,7 @@
       border: 1px solid rgba(255, 255, 255, 0.85);
       user-select: none;
       overflow: hidden;
+      animation: ritual-pill-pulse 2.4s ease-in-out infinite;
     }
 
     /* Luxury shimmer beam */
@@ -507,10 +531,17 @@
     }
     .ritual-pill-item.pill-tarde::before { animation-delay: 0.6s; }
     .ritual-pill-item.pill-noche::before { animation-delay: 1.2s; }
+    .ritual-pill-item.pill-tarde { animation-delay: 0.18s; }
+    .ritual-pill-item.pill-noche { animation-delay: 0.36s; }
 
     @keyframes pill-shimmer {
       0%, 35% { left: -120%; }
       65%, 100% { left: 220%; }
+    }
+
+    @keyframes ritual-pill-pulse {
+      0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); }
+      50% { transform: translateY(-2px) scale(1.035); filter: saturate(1.2) brightness(1.04); }
     }
 
     .ritual-pill-item:hover { transform: translateY(-3px) scale(1.02); }
@@ -568,6 +599,7 @@
       border: 1px solid rgba(255, 255, 255, 0.85);
       position: relative;
       overflow: hidden;
+      animation: tricolor-cta-pulse 1.7s ease-in-out infinite;
     }
     .btn-tricolor-ritual::before {
       content: '';
@@ -584,6 +616,11 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 22px rgba(155, 142, 196, 0.5);
       filter: brightness(1.04);
+    }
+
+    @keyframes tricolor-cta-pulse {
+      0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 7px 18px rgba(235, 139, 125, 0.36), 0 0 0 0 rgba(247, 220, 114, 0.38); filter: saturate(1.08); }
+      50% { transform: translateY(-2px) scale(1.028); box-shadow: 0 14px 28px rgba(155, 142, 196, 0.42), 0 0 0 7px rgba(247, 220, 114, 0.14); filter: saturate(1.28) brightness(1.05); }
     }
 
     /* =======================================================
@@ -1511,7 +1548,7 @@
         <!-- Tricolor Button -->
         <a href="https://biparitualsensorial.com/" target="_blank" rel="noopener noreferrer"
            class="btn-tricolor-ritual" title="Ir a biparitualsensorial.com">
-          <span>Explorar Velas Aromáticas</span>
+          <span>Conoce nuestras nuevas velas aromaticas</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path d="M14 3h7v7h-2V6.41L9.41 16 8 14.59 17.59 5H14V3zM5 5h6V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-6h-2v6H5V5z"/>
           </svg>
@@ -1691,9 +1728,6 @@
         <span>PREMIO ENTREGADO / FINALIZAR</span>
       </button>
 
-      <div class="sync-status-indicator" id="syncStatus">
-        Registro asegurado localmente y en base de datos.
-      </div>
     </div>
   </div>
 
@@ -2171,7 +2205,7 @@
 
     const currentPlayer = {
       name: "", phone: "", email: "", state: "",
-      termsAccepted: false, ticketCode: "", date: ""
+      termsAccepted: false, ticketCode: "", date: "", firstLeadSaved: false, leadData: null
     };
 
     const game = {
@@ -2272,23 +2306,39 @@
       return `BIPA-${randomNum}`;
     }
 
+    function buildLeadKey() {
+      return [
+        currentPlayer.phone,
+        currentPlayer.email
+      ].map(value => String(value || '').trim().toLowerCase()).join('|');
+    }
+
     async function saveLead(resultado) {
       const now = new Date();
       const formattedDate = now.toLocaleDateString('es-VE') + ' ' + now.toLocaleTimeString('es-VE');
+      const consentText = "Acepto voluntariamente que BIPA use mis datos únicamente para contactarme sobre sus productos, promociones y experiencias.";
 
       const leadData = {
+        fecha: formattedDate,
         timestamp: formattedDate,
         ticketCode: currentPlayer.ticketCode || generateTicketCode(),
         nombre: currentPlayer.name,
         telefono: currentPlayer.phone,
-        email: currentPlayer.email,
         estado: currentPlayer.state,
+        email: currentPlayer.email,
+        score: 0,
+        velones: 0,
+        accuracy: 0,
         proteccionDatos: "SÍ (Aceptado)",
+        consentimiento: "SÍ",
+        consentimiento_fecha: formattedDate,
+        consentimiento_texto: consentText,
         resultado: resultado
       };
 
       currentPlayer.ticketCode = leadData.ticketCode;
       currentPlayer.date = leadData.timestamp;
+      currentPlayer.leadData = leadData;
 
       // localStorage
       try {
@@ -2297,21 +2347,23 @@
         localStorage.setItem('bipa_leads', JSON.stringify(stored));
       } catch(e) { console.warn("localStorage error:", e); }
 
-      // Try Sheets — if offline, enqueue to IndexedDB
+      // Try Sheets immediately — if offline, enqueue to IndexedDB
       if (GOOGLE_SHEETS_SCRIPT_URL && GOOGLE_SHEETS_SCRIPT_URL.startsWith('http')) {
         if (navigator.onLine) {
-          fetch(GOOGLE_SHEETS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(leadData)
-          }).then(() => {
+          try {
+            await fetch(GOOGLE_SHEETS_SCRIPT_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              keepalive: true,
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(leadData)
+            });
             if (syncStatus) syncStatus.innerText = "✅ Sincronizado en Google Sheets y en dispositivo.";
             updateAdminPanel();
-          }).catch(() => {
+          } catch {
             idbEnqueue(leadData);
             if (syncStatus) syncStatus.innerText = "💾 Guardado. Se enviará al reconectar.";
-          });
+          }
         } else {
           await idbEnqueue(leadData);
           if (syncStatus) syncStatus.innerText = "📡 Sin conexión. Se enviará automáticamente al reconectar.";
@@ -2324,10 +2376,22 @@
       return leadData;
     }
 
+    async function saveFirstLeadOnce() {
+      const leadKey = buildLeadKey();
+      const sentKey = `bipa_first_lead_sent_${leadKey}`;
+      if (currentPlayer.firstLeadSaved || localStorage.getItem(sentKey) === '1') {
+        return currentPlayer.leadData;
+      }
+
+      currentPlayer.firstLeadSaved = true;
+      localStorage.setItem(sentKey, '1');
+      return saveLead('Registro iniciado');
+    }
+
     // =======================================================
     // FORM SUBMIT
     // =======================================================
-    leadForm.addEventListener('submit', (e) => {
+    leadForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       initAudio();
 
@@ -2355,6 +2419,20 @@
       playSound('click');
       haptic(25);
       sessionPlays++;
+
+      const submitButton = leadForm.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.dataset.originalText = submitButton.innerText;
+        submitButton.innerText = "Registrando...";
+      }
+
+      await saveFirstLeadOnce();
+
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.innerText = submitButton.dataset.originalText || "Iniciar juego";
+      }
 
       gsap.to(screenRegister, {
         opacity: 0,
@@ -2511,7 +2589,14 @@
           playSound('win');
           haptic([30, 50, 30, 50, 100]); // festive sequence on win
 
-          saveLead('¡Ganador!').then(leadData => {
+          const leadData = currentPlayer.leadData || {
+            ticketCode: currentPlayer.ticketCode,
+            nombre: currentPlayer.name,
+            estado: currentPlayer.state,
+            timestamp: currentPlayer.date || new Date().toLocaleDateString('es-VE')
+          };
+
+          Promise.resolve(leadData).then(leadData => {
             lblTicketCode.innerText = leadData.ticketCode;
             lblWinnerName.innerText = leadData.nombre;
             lblWinnerState.innerText = leadData.estado;
@@ -2560,7 +2645,6 @@
           game.running = false;
           playSound('gameover');
           haptic([80, 30, 80]);
-          saveLead('Sin intentos');
           setTimeout(() => gameOverModal.classList.add('open'), 400);
         }
       }
