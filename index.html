@@ -238,6 +238,7 @@
 
     @media (max-width: 700px) {
       body::after { display: none; }
+      #aromaCanvas { display: none; }
       .bipa-card {
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
@@ -1933,7 +1934,7 @@
       const dustCount = Math.min(mobileLimit, Math.floor((canvasW * canvasH) / 14000));
       for (let i = 0; i < dustCount; i++) mistDust.push(new AmbientMistDust());
     }
-    initAromaCanvas();
+    if (window.innerWidth > 700) initAromaCanvas();
     window.addEventListener('resize', initAromaCanvas);
 
     function drawSilkStream(baseY, amp, freq, speed, colorStart, colorEnd, alphaVal) {
@@ -1971,7 +1972,7 @@
       }
       aromaFrameId = requestAnimationFrame(animateAromaCanvas);
     }
-    animateAromaCanvas();
+    if (window.innerWidth > 700) animateAromaCanvas();
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         ctx.clearRect(0, 0, canvasW, canvasH);
