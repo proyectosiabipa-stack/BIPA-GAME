@@ -1969,7 +1969,8 @@
     function animateAromaCanvas() {
       aromaFrameCounter++;
       const mobileFrameSkip = window.innerWidth <= 700 && aromaFrameCounter % 2 !== 0;
-      if (!document.hidden && !mobileFrameSkip) {
+      const gameIsActive = document.body.classList.contains('game-live');
+      if (!document.hidden && !mobileFrameSkip && !gameIsActive) {
         ctx.clearRect(0, 0, canvasW, canvasH);
         waveTime += 0.008;
         mistDust.forEach(s => { s.update(); s.draw(); });
@@ -2273,6 +2274,7 @@
       maxTrack: 0,
       animFrameId: null
     };
+    let lastGameFrameTime = 0;
 
     // Session stats
     let sessionPlays = 0;
@@ -2497,6 +2499,7 @@
         onComplete: () => {
           screenRegister.classList.remove('active');
           screenGame.classList.add('active');
+          document.body.classList.add('game-live');
           calculateTrack();
           gsap.to(screenGame, { opacity: 1, duration: 0.25 });
           initGame();
@@ -2529,7 +2532,10 @@
     // Real-time precision meter update in game loop
     function gameLoop() {
       if (game.running) {
-        game.cursorX += game.speed * game.direction;
+        const now = performance.now();
+        const elapsed = lastGameFrameTime ? Math.min(now - lastGameFrameTime, 34) : 16.67;
+        lastGameFrameTime = now;
+        game.cursorX += game.speed * (elapsed / 16.67) * game.direction;
         if (game.cursorX >= game.maxTrack) {
           game.cursorX = game.maxTrack;
           game.direction = -1;
@@ -2564,6 +2570,8 @@
 
     function initGame() {
       if (game.animFrameId) cancelAnimationFrame(game.animFrameId);
+      document.body.classList.add('game-live');
+      lastGameFrameTime = 0;
       game.round = 1;
       game.lives = 3;
       game.running = true;
@@ -2647,6 +2655,7 @@
 
         if (game.round > game.maxRounds) {
           game.running = false;
+          document.body.classList.remove('game-live');
           sessionWins++;
           playSound('win');
           haptic([30, 50, 30, 50, 100]); // festive sequence on win
@@ -2705,6 +2714,7 @@
 
         if (game.lives <= 0) {
           game.running = false;
+          document.body.classList.remove('game-live');
           playSound('gameover');
           haptic([80, 30, 80]);
           setTimeout(() => gameOverModal.classList.add('open'), 400);
@@ -2732,6 +2742,7 @@
         duration: 0.25,
         onComplete: () => {
           screenGame.classList.remove('active');
+          document.body.classList.remove('game-live');
           screenRegister.classList.add('active');
           gsap.to(screenRegister, { opacity: 1, duration: 0.25 });
           setAmbientMode(null);
