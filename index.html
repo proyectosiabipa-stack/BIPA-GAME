@@ -248,6 +248,7 @@
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
       }
+      .precision-meter-fill { transition: none; }
       .bipa-card {
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
@@ -2257,9 +2258,9 @@
     // GAME CONFIGURATION
     // =======================================================
     const difficultySettings = {
-      1: { speed: 4.2, overlapMin: 68, label: "Meta: 68%" },
-      2: { speed: 5.6, overlapMin: 74, label: "Meta: 74%" },
-      3: { speed: 7.2, overlapMin: 80, label: "Meta: 80% 🔥" }
+      1: { speed: 4.6, overlapMin: 72, label: "Meta: 72%" },
+      2: { speed: 5.5, overlapMin: 72, label: "Meta: 72%" },
+      3: { speed: 6.5, overlapMin: 72, label: "Meta: 72%" }
     };
 
     const currentPlayer = {
@@ -2276,7 +2277,11 @@
       cursorX: 0,
       direction: 1,
       maxTrack: 0,
-      animFrameId: null
+      animFrameId: null,
+      circleRadius: 0,
+      targetCenterX: 0,
+      frameTick: 0,
+      precisionState: ''
     };
     let lastGameFrameTime = 0;
 
@@ -2516,14 +2521,19 @@
     // =======================================================
     function calculateTrack() {
       if (circleTrack && movingCircle) {
-        game.maxTrack = circleTrack.offsetWidth - movingCircle.offsetWidth - 4;
+        const trackWidth = circleTrack.offsetWidth;
+        const markerWidth = movingCircle.offsetWidth;
+        game.circleRadius = markerWidth / 2;
+        game.targetCenterX = trackWidth / 2;
+        game.maxTrack = Math.max(0, trackWidth - markerWidth - 4);
       }
     }
     window.addEventListener('resize', calculateTrack);
 
     function calculateCircleOverlapPercent() {
-      const radius = movingCircle.offsetWidth / 2;
-      const targetCenterX = circleTrack.offsetWidth / 2;
+      const radius = game.circleRadius;
+      const targetCenterX = game.targetCenterX;
+      if (!radius) return 0;
       const movingCenterX = game.cursorX + radius;
       const distance = Math.abs(movingCenterX - targetCenterX);
       if (distance >= 2 * radius) return 0;
@@ -2547,18 +2557,23 @@
           game.cursorX = 0;
           game.direction = 1;
         }
-        movingCircle.style.transform = `translateX(${game.cursorX}px)`;
+        movingCircle.style.transform = `translate3d(${game.cursorX}px, 0, 0)`;
 
-        // Live precision meter fill
-        const pct = calculateCircleOverlapPercent();
-        const reqPct = difficultySettings[game.round] ? difficultySettings[game.round].overlapMin : 68;
-        precisionFill.style.width = pct + '%';
-        if (pct >= reqPct) {
-          precisionFill.style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
-        } else if (pct >= reqPct * 0.7) {
-          precisionFill.style.background = 'linear-gradient(90deg, #eab308, #ca8a04)';
-        } else {
-          precisionFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+        // El indicador se actualiza cada tres fotogramas; el toque conserva precisión total.
+        game.frameTick++;
+        if (game.frameTick % 3 === 0) {
+          const pct = calculateCircleOverlapPercent();
+          const reqPct = difficultySettings[game.round] ? difficultySettings[game.round].overlapMin : 68;
+          precisionFill.style.width = pct + '%';
+          const precisionState = pct >= reqPct ? 'success' : pct >= reqPct * 0.7 ? 'warning' : 'danger';
+          if (precisionState !== game.precisionState) {
+            game.precisionState = precisionState;
+            precisionFill.style.background = precisionState === 'success'
+              ? 'linear-gradient(90deg, #22c55e, #16a34a)'
+              : precisionState === 'warning'
+                ? 'linear-gradient(90deg, #eab308, #ca8a04)'
+                : 'linear-gradient(90deg, #ef4444, #dc2626)';
+          }
         }
       }
       if (game.running) {
@@ -2583,6 +2598,8 @@
       game.direction = 1;
       const config = difficultySettings[1];
       game.speed = config.speed;
+      game.frameTick = 0;
+      game.precisionState = '';
       gameLoop();
       targetPrecisionText.innerText = config.label;
       for (let i = 1; i <= 3; i++) {
