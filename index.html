@@ -10,7 +10,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script>
+    // Micro-animador local: evita que una librería externa bloquee la carga móvil.
+    window.gsap = window.gsap || {
+      to(target, options = {}) {
+        const element = typeof target === 'string' ? document.querySelector(target) : target;
+        if (!element) return;
+        const duration = Math.max(0, Number(options.duration || 0.2) * 1000);
+        const values = Array.isArray(options.x) ? options.x : null;
+        element.style.transition = `transform ${duration}ms ease, opacity ${duration}ms ease`;
+        if (options.opacity !== undefined) element.style.opacity = String(options.opacity);
+        if (values) {
+          element.style.transform = `translate3d(${values[values.length - 1] || 0}px, 0, 0)`;
+        }
+        if (typeof options.onComplete === 'function') window.setTimeout(options.onComplete, duration);
+      }
+    };
+  </script>
   <script async src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -234,9 +250,7 @@
         background: rgba(255, 255, 255, 0.98);
       }
       .aroma-orb { filter: blur(72px); opacity: 0.28; }
-      .aroma-orb-1, .aroma-orb-2, .aroma-orb-3, .aroma-orb-4, .aroma-orb-5 {
-        animation-duration: 34s;
-      }
+      .aroma-orb { animation: none; will-change: auto; }
       .silk-mesh-pattern { animation: none; opacity: 0.5; }
     }
 
@@ -1821,7 +1835,7 @@
     let aromaWisps = [];
 
     function resizeCanvas() {
-      canvasScale = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvasScale = Math.min(window.devicePixelRatio || 1, 1.25);
       canvasW = window.innerWidth;
       canvasH = window.innerHeight;
       aromaCanvas.width = Math.round(canvasW * canvasScale);
@@ -1921,7 +1935,8 @@
     function initAromaCanvas() {
       mistDust = [];
       aromaWisps = [];
-      const dustCount = Math.min(92, Math.floor((canvasW * canvasH) / 11000));
+      const mobileLimit = window.innerWidth <= 700 ? 16 : 92;
+      const dustCount = Math.min(mobileLimit, Math.floor((canvasW * canvasH) / 14000));
       for (let i = 0; i < dustCount; i++) mistDust.push(new AmbientMistDust());
     }
     initAromaCanvas();
@@ -1950,8 +1965,11 @@
     }
 
     let aromaFrameId = null;
+    let aromaFrameCounter = 0;
     function animateAromaCanvas() {
-      if (!document.hidden) {
+      aromaFrameCounter++;
+      const mobileFrameSkip = window.innerWidth <= 700 && aromaFrameCounter % 2 !== 0;
+      if (!document.hidden && !mobileFrameSkip) {
         ctx.clearRect(0, 0, canvasW, canvasH);
         waveTime += 0.008;
         mistDust.forEach(s => { s.update(); s.draw(); });
