@@ -2313,7 +2313,7 @@
       ].map(value => String(value || '').trim().toLowerCase()).join('|');
     }
 
-    async function saveLead(resultado) {
+    function saveLead(resultado) {
       const now = new Date();
       const formattedDate = now.toLocaleDateString('es-VE') + ' ' + now.toLocaleTimeString('es-VE');
       const consentText = "Acepto voluntariamente que BIPA use mis datos únicamente para contactarme sobre sus productos, promociones y experiencias.";
@@ -2347,36 +2347,39 @@
         localStorage.setItem('bipa_leads', JSON.stringify(stored));
       } catch(e) { console.warn("localStorage error:", e); }
 
-      // Try Sheets immediately — if offline, enqueue to IndexedDB
+      // Envío en segundo plano: el juego no debe quedar esperando a Sheets.
       if (GOOGLE_SHEETS_SCRIPT_URL && GOOGLE_SHEETS_SCRIPT_URL.startsWith('http')) {
         if (navigator.onLine) {
+          const payload = JSON.stringify(leadData);
+          let sentWithBeacon = false;
           try {
-            await fetch(GOOGLE_SHEETS_SCRIPT_URL, {
+            if (navigator.sendBeacon) {
+              sentWithBeacon = navigator.sendBeacon(
+                GOOGLE_SHEETS_SCRIPT_URL,
+                new Blob([payload], { type: 'text/plain;charset=utf-8' })
+              );
+            }
+          } catch (e) { sentWithBeacon = false; }
+
+          if (!sentWithBeacon) {
+            fetch(GOOGLE_SHEETS_SCRIPT_URL, {
               method: 'POST',
               mode: 'no-cors',
               keepalive: true,
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify(leadData)
-            });
-            if (syncStatus) syncStatus.innerText = "✅ Sincronizado en Google Sheets y en dispositivo.";
-            updateAdminPanel();
-          } catch {
-            idbEnqueue(leadData);
-            if (syncStatus) syncStatus.innerText = "💾 Guardado. Se enviará al reconectar.";
+              body: payload
+            }).catch(() => idbEnqueue(leadData));
           }
         } else {
-          await idbEnqueue(leadData);
-          if (syncStatus) syncStatus.innerText = "📡 Sin conexión. Se enviará automáticamente al reconectar.";
+          idbEnqueue(leadData);
         }
-      } else {
-        if (syncStatus) syncStatus.innerText = "💾 Registrado localmente (configura Google Sheets para envío en nube).";
       }
 
       updateAdminPanel();
       return leadData;
     }
 
-    async function saveFirstLeadOnce() {
+    function saveFirstLeadOnce() {
       const leadKey = buildLeadKey();
       const sentKey = `bipa_first_lead_sent_${leadKey}`;
       if (currentPlayer.firstLeadSaved || localStorage.getItem(sentKey) === '1') {
@@ -2427,7 +2430,7 @@
         submitButton.innerText = "Registrando...";
       }
 
-      await saveFirstLeadOnce();
+      saveFirstLeadOnce();
 
       if (submitButton) {
         submitButton.disabled = false;
@@ -2494,15 +2497,19 @@
           precisionFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
         }
       }
-      game.animFrameId = requestAnimationFrame(gameLoop);
+      if (game.running) {
+        game.animFrameId = requestAnimationFrame(gameLoop);
+      } else {
+        game.animFrameId = null;
+      }
     }
-    gameLoop();
 
     function updateLivesDisplay() {
       livesBadge.innerText = '❤️'.repeat(Math.max(0, game.lives)) || '❌';
     }
 
     function initGame() {
+      if (game.animFrameId) cancelAnimationFrame(game.animFrameId);
       game.round = 1;
       game.lives = 3;
       game.running = true;
@@ -2510,6 +2517,7 @@
       game.direction = 1;
       const config = difficultySettings[1];
       game.speed = config.speed;
+      gameLoop();
       targetPrecisionText.innerText = config.label;
       for (let i = 1; i <= 3; i++) {
         document.getElementById(`velon${i}`).className = 'velon-item' + (i === 1 ? ' active' : '');
