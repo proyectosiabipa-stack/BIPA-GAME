@@ -216,7 +216,11 @@
       height: 100%;
       pointer-events: none;
       contain: strict;
+      display: none;
     }
+
+    .aroma-orb { display: none; }
+    .silk-mesh-pattern { animation: none; opacity: 0.48; }
 
     /* =======================================================
        TARJETA PRINCIPAL
@@ -1842,8 +1846,8 @@
       aromaCanvas.height = Math.round(canvasH * canvasScale);
       ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    canvasW = window.innerWidth;
+    canvasH = window.innerHeight;
 
     class AmbientMistDust {
       constructor() { this.reset(true); }
@@ -1939,8 +1943,9 @@
       const dustCount = Math.min(mobileLimit, Math.floor((canvasW * canvasH) / 14000));
       for (let i = 0; i < dustCount; i++) mistDust.push(new AmbientMistDust());
     }
-    if (window.innerWidth > 700) initAromaCanvas();
-    window.addEventListener('resize', initAromaCanvas);
+    // El fondo animado se mantiene desactivado para que Android e iPhone
+    // tengan el mismo rendimiento y el juego conserve todos los recursos.
+    mistDust = [];
 
     function drawSilkStream(baseY, amp, freq, speed, colorStart, colorEnd, alphaVal) {
       ctx.save();
@@ -1977,7 +1982,6 @@
       }
       aromaFrameId = requestAnimationFrame(animateAromaCanvas);
     }
-    if (window.innerWidth > 700) animateAromaCanvas();
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         ctx.clearRect(0, 0, canvasW, canvasH);
