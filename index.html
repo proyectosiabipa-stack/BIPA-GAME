@@ -6,6 +6,9 @@
   <title>BIPA | Buenas Ideas Puestas en Acción</title>
 
   <script>
+    if (/Android/i.test(navigator.userAgent)) {
+      document.documentElement.classList.add('android-device');
+    }
     // Micro-animador local: evita que una librería externa bloquee la carga móvil.
     window.gsap = window.gsap || {
       to(target, options = {}) {
@@ -265,6 +268,16 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
       }
+    }
+
+    .android-device .bipa-card::after,
+    .android-device .btn-bipa-primary,
+    .android-device .btn-bipa-primary::before,
+    .android-device .ritual-pill-item,
+    .android-device .ritual-pill-item::before,
+    .android-device .btn-tricolor-ritual,
+    .android-device .btn-tricolor-ritual::before {
+      animation: none !important;
     }
 
     .bipa-card::after {
@@ -935,6 +948,9 @@
       justify-content: center;
       pointer-events: none;
       border: 1px solid rgba(255, 255, 255, 0.4);
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
     }
     .moving-circle::after { content: '🔥'; font-size: 16px; filter: drop-shadow(0 0 4px #f59e0b); }
 
@@ -949,8 +965,11 @@
     .precision-meter-fill {
       height: 100%;
       border-radius: 2px;
-      width: 0%;
-      transition: width 0.15s ease, background 0.3s ease;
+      width: 100%;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: background 0.2s ease;
+      will-change: transform;
       background: linear-gradient(90deg, #ef4444, #eab308, #22c55e);
     }
 
@@ -1453,7 +1472,7 @@
     <!-- SCREEN 1: REGISTER -->
     <section class="screen active" id="screenRegister">
       <div class="brand-header-bipa" id="brandHeader">
-        <img src="logo-bipa.png" alt="Logo BIPA" class="bipa-logo-img" id="bipaLogoImg">
+        <img src="logo-bipa-optimized.png" alt="Logo BIPA" class="bipa-logo-img" id="bipaLogoImg" width="640" height="420" decoding="async" fetchpriority="high">
         <div class="bipa-slogan">BUENAS IDEAS PUESTAS EN ACCIÓN</div>
       </div>
 
@@ -2251,8 +2270,16 @@
       } catch(e) { console.warn('IDB flush error:', e); }
     }
 
-    // Attempt sync when connection returns
-    window.addEventListener('online', () => idbFlush());
+    function scheduleBackgroundSync() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => idbFlush(), { timeout: 8000 });
+      } else {
+        window.setTimeout(idbFlush, 8000);
+      }
+    }
+
+    // La sincronización se agenda fuera del momento crítico de interacción.
+    window.addEventListener('online', scheduleBackgroundSync, { passive: true });
 
     // =======================================================
     // GAME CONFIGURATION
@@ -2407,7 +2434,7 @@
 
       // localStorage
       try {
-        const stored = JSON.parse(localStorage.getItem('bipa_leads') || '[]');
+        const stored = JSON.parse(localStorage.getItem('bipa_leads') || '[]').slice(-99);
         stored.push(leadData);
         localStorage.setItem('bipa_leads', JSON.stringify(stored));
       } catch(e) { console.warn("localStorage error:", e); }
@@ -2564,7 +2591,7 @@
         if (game.frameTick % 3 === 0) {
           const pct = calculateCircleOverlapPercent();
           const reqPct = difficultySettings[game.round] ? difficultySettings[game.round].overlapMin : 68;
-          precisionFill.style.width = pct + '%';
+          precisionFill.style.transform = `scaleX(${pct / 100})`;
           const precisionState = pct >= reqPct ? 'success' : pct >= reqPct * 0.7 ? 'warning' : 'danger';
           if (precisionState !== game.precisionState) {
             game.precisionState = precisionState;
@@ -2653,7 +2680,8 @@
     // =======================================================
     // ACTION BUTTON
     // =======================================================
-    btnAction.addEventListener('click', () => {
+    btnAction.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
       if (!game.running) return;
       initAudio();
       haptic(18); // micro-tap on button press
@@ -2860,7 +2888,7 @@
 
     // Attempt to flush any queued records on load
     updateAdminPanel();
-    setTimeout(idbFlush, 2000);
+    scheduleBackgroundSync();
 
   </script>
 </body>
