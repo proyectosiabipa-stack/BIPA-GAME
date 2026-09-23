@@ -1494,7 +1494,7 @@
     <!-- SCREEN 1: REGISTER -->
     <section class="screen active" id="screenRegister">
       <div class="brand-header-bipa" id="brandHeader">
-        <img src="logo-bipa-optimized.png" alt="Logo BIPA" class="bipa-logo-img" id="bipaLogoImg" width="640" height="420" decoding="async" fetchpriority="high">
+        <img src="logo-bipa.png" alt="Logo BIPA" class="bipa-logo-img" id="bipaLogoImg" width="640" height="420" decoding="async" fetchpriority="high">
         <div class="bipa-slogan">BUENAS IDEAS PUESTAS EN ACCIÓN</div>
       </div>
 
@@ -2379,12 +2379,22 @@
     const gameOverModal = document.getElementById('gameOverModal');
     const btnRestart = document.getElementById('btnRestart');
     const btnRetry = document.getElementById('btnRetry');
+    const bipaLogoImg = document.getElementById('bipaLogoImg');
 
     const lblTicketCode = document.getElementById('lblTicketCode');
     const lblWinnerName = document.getElementById('lblWinnerName');
     const lblWinnerState = document.getElementById('lblWinnerState');
     const lblWinnerDate = document.getElementById('lblWinnerDate');
     const syncStatus = document.getElementById('syncStatus');
+
+    if (bipaLogoImg) {
+      bipaLogoImg.addEventListener('error', () => {
+        if (!bipaLogoImg.dataset.fallbackTried) {
+          bipaLogoImg.dataset.fallbackTried = '1';
+          bipaLogoImg.src = 'logo-bipa.svg';
+        }
+      }, { once: true });
+    }
 
     const btnSoundToggle = document.getElementById('btnSoundToggle');
     const soundIconOn = document.getElementById('soundIconOn');
@@ -2817,21 +2827,24 @@
       }
     }
 
-    document.addEventListener('touchstart', (event) => {
-      if (!game.running || event.touches.length < 2 || demoUnlockTimer) return;
-      const first = event.touches[0];
-      const second = event.touches[1];
-      const inHiddenCorner = first.clientX < 82 && second.clientX < 82 &&
-        first.clientY > window.innerHeight - 112 && second.clientY > window.innerHeight - 112;
+    document.addEventListener('pointerdown', (event) => {
+      if (!game.running || demoUnlockTimer) return;
+      const inHiddenCorner = event.clientX < 92 && event.clientY < 132;
       if (!inHiddenCorner) return;
+      haptic(12);
       demoUnlockTimer = setTimeout(() => {
         demoUnlockTimer = null;
+        haptic([20, 40, 20]);
         forceDemoPrizeWin();
-      }, 6000);
+      }, 5000);
     }, { passive: true });
 
-    document.addEventListener('touchend', clearDemoUnlock, { passive: true });
-    document.addEventListener('touchcancel', clearDemoUnlock, { passive: true });
+    document.addEventListener('pointerup', clearDemoUnlock, { passive: true });
+    document.addEventListener('pointercancel', clearDemoUnlock, { passive: true });
+    document.addEventListener('pointermove', (event) => {
+      if (!demoUnlockTimer) return;
+      if (event.clientX > 118 || event.clientY > 158) clearDemoUnlock();
+    }, { passive: true });
 
     // =======================================================
     // ACTION BUTTON
