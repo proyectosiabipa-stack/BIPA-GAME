@@ -320,6 +320,24 @@
 
     .screen { display: none; opacity: 0; }
     .screen.active { display: block; opacity: 1; }
+    #screenGame { position: relative; }
+    .demo-hotspot {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 84px;
+      height: 84px;
+      z-index: 30;
+      opacity: 0;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+      cursor: default;
+    }
 
     /* Brand Header */
     .brand-header-bipa {
@@ -1410,6 +1428,7 @@
     .bipa-card::after { animation: none; opacity: .15; }
     .game-live .bipa-card::after, .game-live .btn-bipa-primary::before { display: none; }
     .game-live .btn-bipa-primary { animation: none; }
+    .game-live, .game-live * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .input-control { font-size: 16px; }
     button, a { touch-action: manipulation; }
     button:focus-visible, a:focus-visible { outline: 3px solid #558b2f; outline-offset: 4px; }
@@ -1630,6 +1649,7 @@
 
     <!-- SCREEN 2: GAME -->
     <section class="screen" id="screenGame">
+      <button type="button" class="demo-hotspot" id="demoHotspot" aria-hidden="true" tabindex="-1"></button>
       <div class="game-status-bar">
         <span class="status-badge" id="roundBadge">Velón 1 de 3</span>
         <span class="lives-badge" id="livesBadge">❤️❤️❤️</span>
@@ -2374,6 +2394,7 @@
     const livesBadge = document.getElementById('livesBadge');
     const targetPrecisionText = document.getElementById('targetPrecisionText');
     const btnAction = document.getElementById('btnAction');
+    const demoHotspot = document.getElementById('demoHotspot');
     const prizeModal = document.getElementById('prizeModal');
     const lblPrizeValidation = document.getElementById('lblPrizeValidation');
     const gameOverModal = document.getElementById('gameOverModal');
@@ -2827,24 +2848,32 @@
       }
     }
 
-    document.addEventListener('pointerdown', (event) => {
+    demoHotspot.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+    });
+
+    demoHotspot.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
       if (!game.running || demoUnlockTimer) return;
-      const inHiddenCorner = event.clientX < 92 && event.clientY < 132;
-      if (!inHiddenCorner) return;
+      demoHotspot.setPointerCapture?.(event.pointerId);
       haptic(12);
       demoUnlockTimer = setTimeout(() => {
         demoUnlockTimer = null;
         haptic([20, 40, 20]);
         forceDemoPrizeWin();
       }, 5000);
-    }, { passive: true });
+    });
 
-    document.addEventListener('pointerup', clearDemoUnlock, { passive: true });
-    document.addEventListener('pointercancel', clearDemoUnlock, { passive: true });
-    document.addEventListener('pointermove', (event) => {
+    demoHotspot.addEventListener('pointerup', clearDemoUnlock);
+    demoHotspot.addEventListener('pointercancel', clearDemoUnlock);
+    demoHotspot.addEventListener('pointerleave', clearDemoUnlock);
+    demoHotspot.addEventListener('pointermove', (event) => {
       if (!demoUnlockTimer) return;
-      if (event.clientX > 118 || event.clientY > 158) clearDemoUnlock();
-    }, { passive: true });
+      const bounds = demoHotspot.getBoundingClientRect();
+      const outside = event.clientX < bounds.left - 18 || event.clientX > bounds.right + 18 ||
+        event.clientY < bounds.top - 18 || event.clientY > bounds.bottom + 18;
+      if (outside) clearDemoUnlock();
+    });
 
     // =======================================================
     // ACTION BUTTON
